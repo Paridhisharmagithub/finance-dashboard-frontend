@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://finance-dashboard-backend-gf2z.onrender.com"
+  baseURL: import.meta.env.VITE_API_URL
 });
 
 API.interceptors.request.use((req) => {
