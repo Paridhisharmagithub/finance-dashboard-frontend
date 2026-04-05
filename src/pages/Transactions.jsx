@@ -11,25 +11,45 @@ export default function Transactions() {
   const [filters, setFilters] = useState({
     type: "",
     category: "",
-    search: ""
+    search: "",
+    startDate: "",
+    endDate: ""
+  });
+
+  const [form, setForm] = useState({
+    amount: "",
+    type: "income",
+    category: ""
   });
 
   const [page, setPage] = useState(1);
   const [meta, setMeta] = useState({});
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  /* ---------------- FETCH ---------------- */
+
   useEffect(() => {
+    if (user?.role === "viewer") {
+      setLoading(false); // 🔥 FIX
+      return;
+    }
+
     fetchTransactions();
   }, [page]);
 
   const fetchTransactions = async () => {
     try {
+      setLoading(true);
+
       const res = await API.get("/transactions", {
         params: {
           page,
           type: filters.type || undefined,
           category: filters.category || undefined,
-          search: filters.search || undefined
+          search: filters.search || undefined,
+          startDate: filters.startDate || undefined,
+          endDate: filters.endDate || undefined
         }
       });
 
@@ -37,17 +57,9 @@ export default function Transactions() {
       setMeta(res.data.meta);
 
     } catch (err) {
-      console.error(err);
       setError("Failed to fetch transactions ❌");
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await API.delete(`/transactions/${id}`);
-      fetchTransactions();
-    } catch (err) {
-      setError("Delete failed ❌");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -55,6 +67,73 @@ export default function Transactions() {
     setPage(1);
     fetchTransactions();
   };
+
+  /* ---------------- DELETE ---------------- */
+
+  const handleDelete = async (id) => {
+    try {
+      await API.delete(`/transactions/${id}`);
+      fetchTransactions();
+    } catch {
+      setError("Delete failed ❌");
+    }
+  };
+
+  /* ---------------- ADD / EDIT ---------------- */
+
+  const handleSave = async () => {
+    if (!form.amount || !form.category) {
+      setError("Fill all fields");
+      return;
+    }
+
+    try {
+      if (form._id) {
+        await API.put(`/transactions/${form._id}`, {
+          ...form,
+          amount: Number(form.amount)
+        });
+      } else {
+        await API.post("/transactions", {
+          ...form,
+          amount: Number(form.amount)
+        });
+      }
+
+      setForm({ amount: "", type: "income", category: "" });
+      fetchTransactions();
+      setError("");
+
+    } catch {
+      setError("Error saving transaction ❌");
+    }
+  };
+
+  /* ---------------- VIEWER BLOCK ---------------- */
+
+  if (user?.role === "viewer") {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <Navbar />
+        <div className="text-center mt-20 text-gray-500">
+          You don’t have access to transactions
+        </div>
+      </div>
+    );
+  }
+
+  /* ---------------- LOADING ---------------- */
+
+  if (loading) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <Navbar />
+        <p className="text-center mt-20">Loading...</p>
+      </div>
+    );
+  }
+
+  /* ---------------- MAIN UI ---------------- */
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -101,6 +180,22 @@ export default function Transactions() {
             }
           />
 
+          <input
+            type="date"
+            className="border p-2 rounded text-sm"
+            onChange={(e) =>
+              setFilters({ ...filters, startDate: e.target.value })
+            }
+          />
+
+          <input
+            type="date"
+            className="border p-2 rounded text-sm"
+            onChange={(e) =>
+              setFilters({ ...filters, endDate: e.target.value })
+            }
+          />
+
           <button
             className="bg-blue-600 text-white px-4 rounded text-sm"
             onClick={handleFilter}
@@ -109,7 +204,49 @@ export default function Transactions() {
           </button>
         </div>
 
-        {/* TRANSACTION LIST */}
+        {/* ADD / EDIT FORM */}
+        <RoleGate allowedRoles={["admin"]}>
+          <div className="bg-white p-4 rounded shadow mb-6 flex gap-3 flex-wrap">
+
+            <input
+              placeholder="Amount"
+              value={form.amount}
+              className="border p-2 rounded text-sm"
+              onChange={(e) =>
+                setForm({ ...form, amount: e.target.value })
+              }
+            />
+
+            <input
+              placeholder="Category"
+              value={form.category}
+              className="border p-2 rounded text-sm"
+              onChange={(e) =>
+                setForm({ ...form, category: e.target.value })
+              }
+            />
+
+            <select
+              value={form.type}
+              className="border p-2 rounded text-sm"
+              onChange={(e) =>
+                setForm({ ...form, type: e.target.value })
+              }
+            >
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+
+            <button
+              className="bg-green-600 text-white px-4 rounded text-sm"
+              onClick={handleSave}
+            >
+              {form._id ? "Update" : "Add"}
+            </button>
+          </div>
+        </RoleGate>
+
+        {/* LIST */}
         <div className="bg-white p-4 rounded shadow">
 
           {transactions.length === 0 && (
@@ -140,27 +277,32 @@ export default function Transactions() {
                 >
                   ₹{t.amount}
                 </p>
-
                 <p className="text-xs text-gray-500">{t.type}</p>
               </div>
 
-              {/* DELETE (ADMIN ONLY) */}
-              <RoleGate allowedRoles={["admin"]}>
-                <button
-                  className="text-red-500 text-xs"
-                  onClick={() => handleDelete(t._id)}
-                >
-                  Delete
-                </button>
-              </RoleGate>
+              {user?.role === "admin" && (
+                <div className="flex gap-3">
+                  <button
+                    className="text-blue-500 text-xs"
+                    onClick={() => setForm(t)}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    className="text-red-500 text-xs"
+                    onClick={() => handleDelete(t._id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           ))}
-
         </div>
 
         {/* PAGINATION */}
         <div className="flex justify-between mt-4 text-sm">
-
           <button
             disabled={page === 1}
             onClick={() => setPage(page - 1)}
@@ -180,7 +322,6 @@ export default function Transactions() {
           >
             Next
           </button>
-
         </div>
 
       </div>

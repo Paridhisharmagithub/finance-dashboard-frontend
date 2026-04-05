@@ -48,28 +48,41 @@ export default function Dashboard() {
 
   const handleAdd = async () => {
     if (!form.amount || !form.category) {
-      setError("Fill all fields");
-      return;
+        setError("Fill all fields");
+        return;
     }
 
     try {
-      await API.post("/transactions", {
-        ...form,
-        amount: Number(form.amount)
-      });
+        if (form._id) {
+        await API.put(`/transactions/${form._id}`, {
+            ...form,
+            amount: Number(form.amount)
+        });
+        } else {
+        await API.post("/transactions", {
+            ...form,
+            amount: Number(form.amount)
+        });
+        }
 
-      setForm({ amount: "", type: "income", category: "" });
-      setError("");
-      fetchData();
+        setForm({ amount: "", type: "income", category: "" });
+        fetchData();
+        setError("");
 
     } catch (err) {
-      if (err.response?.status === 403) {
-        setError("Only admin can add transactions ❌");
-      } else {
-        setError("Error adding transaction ❌");
-      }
+        setError("Error saving transaction ❌");
     }
-  };
+    };
+
+  const handleDelete = async (id) => {
+    try {
+        await API.delete(`/transactions/${id}`);
+        fetchData();
+    } catch (err) {
+        setError("Delete failed ❌");
+    }
+};
+
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -82,7 +95,7 @@ export default function Dashboard() {
                 You have read-only access to summary data.
             </p>
         )}
-        
+
         {/* Error */}
         {error && (
           <div className="bg-red-100 text-red-600 p-2 rounded mb-4 text-sm">
@@ -164,40 +177,64 @@ export default function Dashboard() {
 
         {/* Transactions (ANALYST + ADMIN) */}
         <RoleGate allowedRoles={["analyst", "admin"]}>
-          <div className="bg-white p-5 rounded-xl shadow-sm border">
-            <h2 className="text-lg font-medium text-gray-800 mb-3">
-              Transactions
-            </h2>
+            <div className="bg-white p-5 rounded-xl shadow-sm border">
+                <h2 className="text-lg font-medium text-gray-800 mb-3">
+                Transactions
+                </h2>
 
-            {transactions.length === 0 && (
-              <p className="text-gray-500 text-sm">
-                No transactions yet
-              </p>
-            )}
+                {transactions.length === 0 && (
+                <p className="text-gray-500 text-sm">
+                    No transactions yet
+                </p>
+                )}
 
-            {transactions.map((t) => (
-              <div
-                key={t._id}
-                className="flex justify-between py-2 border-b text-sm"
-              >
-                <span className="text-gray-700">{t.category}</span>
-
-                <span className="text-gray-900 font-medium">
-                  ₹{t.amount}
-                </span>
-
-                <span
-                  className={
-                    t.type === "income"
-                      ? "text-green-600"
-                      : "text-red-600"
-                  }
+                {transactions.map((t) => (
+                <div
+                    key={t._id}
+                    className="flex justify-between items-center py-2 border-b text-sm"
                 >
-                  {t.type}
-                </span>
-              </div>
-            ))}
-          </div>
+                    {/* Category */}
+                    <span className="text-gray-700">{t.category}</span>
+
+                    {/* Amount */}
+                    <span className="text-gray-900 font-medium">
+                    ₹{t.amount}
+                    </span>
+
+                    {/* Type */}
+                    <span
+                    className={
+                        t.type === "income"
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
+                    >
+                    {t.type}
+                    </span>
+
+                    {/* 🔥 ACTIONS (ADMIN ONLY) */}
+                    {user?.role === "admin" && (
+                        <div className="flex gap-3">
+                            {/* Edit */}
+                            <button
+                                className="text-blue-500 text-xs"
+                                onClick={() => setForm(t)}
+                                >
+                                Edit
+                            </button>
+
+                            {/* Delete */}
+                            <button
+                                className="text-red-500 text-xs"
+                                onClick={() => handleDelete(t._id)}
+                                >
+                                Delete
+                            </button>
+                        </div>
+                    )}
+                </div>
+                ))}
+            </div>
         </RoleGate>
 
       </div>
