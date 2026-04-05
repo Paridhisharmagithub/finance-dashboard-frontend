@@ -1,16 +1,100 @@
-# React + Vite
+# 💻 Finance Dashboard Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 🚀 Overview
 
-Currently, two official plugins are available:
+This is the frontend of the **Finance Dashboard**, a role-based financial management system.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+It provides an intuitive UI for users to interact with financial data, visualize insights, and manage transactions based on their roles.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🎯 Features
 
-## Expanding the ESLint configuration
+### 🔐 Authentication
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+* Login & Register
+* JWT-based session handling
+
+### 📊 Dashboard
+
+* Income, Expense, Balance overview
+* Category-wise visualization
+
+### 💰 Transactions
+
+* Add / Edit / Delete (Admin)
+* View transactions (Analyst)
+* Filters & search
+* Pagination
+
+### 👨‍💼 Admin Panel
+
+* View users
+* Change roles dynamically
+
+### 🔒 Role-Based UI
+
+* Admin → Full access
+* Analyst → Read-only transactions
+* Viewer → Dashboard only
+
+---
+
+## 🧠 Concepts Used
+
+* Role-based UI rendering
+* API integration using Axios
+* State management using React Hooks
+* Conditional rendering
+* Protected routes
+
+---
+
+## ⚙️ Tech Stack
+
+* **React.js**
+* **Vite**
+* **Tailwind CSS**
+* **Axios**
+* **React Router**
+
+---
+
+## 🌐 Deployment
+
+* Frontend deployed on **Vercel**
+
+---
+
+## 🔗 Backend Integration
+
+* Connected to deployed backend API
+* Uses environment variables for API URL
+
+---
+
+## 🧪 Features Tested
+
+* Login & authentication
+* Role-based access
+* CRUD operations
+* API error handling
+
+---
+
+## 🚀 Future Improvements
+
+* Better UI/UX design
+* Toast notifications
+* Dark mode
+* Charts & analytics enhancements
+
+---
+
+## 📌 Conclusion
+
+This frontend provides a clean and responsive interface for managing financial data with secure role-based access.
+
+---
+
+⭐ Star this repo if you found it useful!
